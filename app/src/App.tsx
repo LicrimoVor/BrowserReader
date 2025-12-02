@@ -1,16 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+import { shareFile } from 'tauri-plugin-share'
+import { writeTextFile, BaseDirectory } from '@tauri-apps/plugin-fs';
+
+// Share text
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
+  
 
   async function greet() {
     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     setGreetMsg(await invoke("greet", { name }));
   }
+
+  useEffect(() => {
+    const contents = JSON.stringify({ notifications: true });
+    writeTextFile('config.json', contents, {
+      baseDir: BaseDirectory.AppConfig,
+    });
+  }, [])
+
 
   return (
     <main className="container">
@@ -44,6 +57,12 @@ function App() {
         <button type="submit">Greet</button>
       </form>
       <p>{greetMsg}</p>
+      <a></a>
+      <button onClick={() => {
+        shareFile('config.json', 'image/png');
+      }}>
+        share
+      </button>
     </main>
   );
 }
