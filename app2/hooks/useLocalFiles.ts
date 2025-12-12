@@ -1,48 +1,57 @@
-import * as FileSystem from 'expo-file-system'
+import { File, Directory, Paths } from 'expo-file-system';
 import { useState, useEffect, useCallback } from 'react'
+import { Alert } from 'react-native';
 
-const DATA_DIR = FileSystem.Paths.document + 'data/'
+const DATA_DIR = new Directory(Paths.cache, 'asdasdwasd')
+if (!DATA_DIR.exists) {
+    DATA_DIR.create({intermediates: true})
+}
+
+
+export type LocalFile = {
+    name: string
+    file: File,
+    size?: number 
+    modified?: number 
+}
 
 export function useLocalFiles() {
-    const [files, setFiles] = useState([])
+    const [files, setFiles] = useState<LocalFile[]>([])
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
+    const [error, setError] = useState<any>(null)
 
-    const readFiles = useCallback(async () => {
+    const readFiles = useCallback(() => {
         try {
             setLoading(true)
             setError(null)
 
-            const dirInfo = await FileSystem.getInfoAsync(DATA_DIR)
-            if (!dirInfo.exists) {
-                await FileSystem.makeDirectoryAsync(DATA_DIR, {
-                    intermediates: true,
-                })
-            }
-
-            const names = await FileSystem.readDirectoryAsync(DATA_DIR)
-
-            const detailed = await Promise.all(
-                names.map(async (name) => {
-                    const filePath = DATA_DIR + name
-                    const info = await FileSystem.getInfoAsync(filePath)
+            const files = DATA_DIR.list()
+            const detailed: LocalFile[] = 
+                files.map((file) => {
+                    console.log("типо файл", file)
+                    if (Paths.info(file.uri).isDirectory) {
+                        return
+                    }
+                    const info = file.info()
 
                     return {
-                        name,
-                        path: filePath,
+                        name: file.name,
+                        file: file as File,
                         size: info.size,
                         modified: info.modificationTime,
-                        isFile: info.isDirectory === false,
                     }
-                }),
-            )
+                }).filter((val) => val != undefined)
 
+            console.log("всего файлов", detailed)
             setFiles(detailed)
         } catch (e) {
+            console.log("ошибочкай", e)
             setError(e)
         } finally {
             setLoading(false)
         }
+        console.log('files', DATA_DIR)
+        console.log('files', files)
     }, [])
 
     useEffect(() => {

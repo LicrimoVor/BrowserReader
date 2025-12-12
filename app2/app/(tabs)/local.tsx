@@ -1,81 +1,58 @@
-import React, { useMemo, useState } from 'react'
-import { Alert, FlatList, Share, Text, View } from 'react-native'
-import { LocalFileItem } from '../../components/my/localFileItem'
-import { RenameModal } from '../../components/my/renameModal'
+import { ThemedView } from '@/components/view';
+import { LocalFile, useLocalFiles } from '@/hooks/useLocalFiles';
+import * as Sharing from 'expo-sharing';
+import React, { useState } from 'react';
+import { Alert, Button, FlatList, Text, View } from 'react-native';
+import { LocalFileItem } from '../../components/my/localFileItem';
+import { RenameModal } from '../../components/my/renameModal';
 
 export default function LocalPage() {
-    // Demo local files (in-memory). Replace with real FS calls.
-    const initialFiles = useMemo(
-        () => [
-            {
-                id: '1',
-                name: 'report.pdf',
-                size: '1.2 MB',
-                lastModified: '2025-11-20',
-            },
-            {
-                id: '2',
-                name: 'photo.jpg',
-                size: '640 KB',
-                lastModified: '2025-11-18',
-            },
-            {
-                id: '3',
-                name: 'notes.txt',
-                size: '3 KB',
-                lastModified: '2025-11-01',
-            },
-        ],
-        [],
-    )
-
-    const [files, setFiles] = useState(initialFiles)
-    const [renameTarget, setRenameTarget] = useState(null)
+    const { files, loading, error, refresh: readFiles, dir: DATA_DIR } = useLocalFiles()
+    const [renameTarget, setRenameTarget] = useState < LocalFile | null>(null)
     const [isRenameModalVisible, setRenameModalVisible] = useState(false)
 
-    const handleRename = (item) => {
+    const handleRename = (item: LocalFile) => {
         setRenameTarget(item)
         setRenameModalVisible(true)
     }
 
-    const handleDelete = (item) => {
-        Alert.alert('Delete', `Delete "${item.name}"?`, [
-            { text: 'Cancel', style: 'cancel' },
-            {
-                text: 'Delete',
-                style: 'destructive',
-                onPress: () =>
-                    setFiles((prev) => prev.filter((f) => f.id !== item.id)),
-            },
-        ])
+    const handleDelete = (item: LocalFile) => {
+        item.file.delete()
     }
 
-    const handleShare = async (item) => {
+    const handleShare = async (item: LocalFile) => {
         try {
-            // If using real file path: Share.share({ url: 'file://' + item.path })
-            await Share.share({ message: `Sharing file: ${item.name}` })
+            console.log('item share', item)
+            await Sharing.shareAsync(item.file.uri)
         } catch (e) {
             Alert.alert('Share error', e.message || String(e))
         }
     }
 
-    const handleSaveRename = (newName) => {
+    const handleSaveRename = (newName: string) => {
         if (!newName || !renameTarget) return
-        // minimal validation
-        setFiles((prev) =>
-            prev.map((f) =>
-                f.id === renameTarget.id ? { ...f, name: newName } : f,
-            ),
-        )
+        renameTarget.file.rename(newName)
         setRenameTarget(null)
         setRenameModalVisible(false)
+        readFiles()
+    }
+
+    const addFile = () => {
+        // const file = new File(DATA_DIR, 'new-file.txt')
+        // file.create({ intermediates: true })
+        const file = DATA_DIR.createFile('new-file2.txt', 'Hello world!')
+        file.write('hello world 32132123')
+        // const file = new File(DATA_DIR + '/new-file.txt')
+        // file.create()
+        console.log('!!!!')
+        readFiles()
     }
 
     return (
         <View style={{ flex: 1 }}>
             <FlatList
                 data={files}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.name}
                 contentContainerStyle={{ padding: 12 }}
                 ListEmptyComponent={
                     <Text style={{ textAlign: 'center' }}>No local files.</Text>
@@ -99,6 +76,9 @@ export default function LocalPage() {
                 }}
                 onSave={handleSaveRename}
             />
+            <ThemedView>
+                <Button onPress={addFile} title='add'/>
+            </ThemedView>
         </View>
     )
 }
