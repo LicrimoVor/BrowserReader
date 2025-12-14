@@ -1,8 +1,13 @@
-import { styles } from '@/constants/style'
 import React, { useEffect, useState } from 'react'
-import { Modal, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import {
+    Modal,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native'
 
-// ---------- Rename modal ----------
 export function RenameModal({ visible, item, onCancel, onSave }: any) {
     const [value, setValue] = useState(item ? item.name : '')
 
@@ -11,15 +16,15 @@ export function RenameModal({ visible, item, onCancel, onSave }: any) {
     }, [item])
 
     return (
-        <Modal visible={visible} transparent animationType="slide">
+        <Modal visible={visible} transparent animationType="fade">
             <View style={styles.modalOverlay}>
                 <View style={styles.modalBox}>
-                    <Text style={styles.modalTitle}>Rename file</Text>
+                    <Text style={styles.modalTitle}>Переимновать файл</Text>
                     <TextInput
                         style={styles.input}
                         value={value}
                         onChangeText={setValue}
-                        placeholder="New filename"
+                        placeholder="Новое имя файла"
                         autoFocus
                     />
                     <View style={styles.modalButtons}>
@@ -27,13 +32,13 @@ export function RenameModal({ visible, item, onCancel, onSave }: any) {
                             style={styles.modalBtn}
                             onPress={onCancel}
                         >
-                            <Text>Cancel</Text>
+                            <Text>Отменить</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.modalBtn, styles.modalSave]}
                             onPress={() => onSave(value)}
                         >
-                            <Text style={{ color: '#fff' }}>Save</Text>
+                            <Text style={{ color: '#fff' }}>Сохранить</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -41,3 +46,31 @@ export function RenameModal({ visible, item, onCancel, onSave }: any) {
         </Modal>
     )
 }
+
+export const styles = StyleSheet.create({
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    modalBox: { backgroundColor: '#fff', borderRadius: 8, padding: 16 },
+    modalTitle: { fontSize: 16, fontWeight: '600', marginBottom: 12 },
+    input: {
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        padding: 8,
+        borderRadius: 6,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 12,
+    },
+    modalBtn: { padding: 8, marginLeft: 8 },
+    modalSave: {
+        backgroundColor: '#2563EB',
+        paddingHorizontal: 12,
+        borderRadius: 6,
+    },
+})

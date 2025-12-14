@@ -1,92 +1,192 @@
-import { Image } from 'expo-image'
-import { Platform, StyleSheet } from 'react-native'
-
-import ParallaxScrollView from '@/components/parallax-scroll-view'
 import { ThemedText } from '@/components/text'
+import { Icon } from '@/components/ui/icon'
 import { ThemedView } from '@/components/view'
-import { Link } from 'expo-router'
+import { Colors } from '@/constants/theme'
+import { DATA_DIR } from '@/hooks/useLocalFiles'
+import { File } from 'expo-file-system'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+    BackHandler,
+    FlatList,
+    StyleSheet,
+    TouchableOpacity,
+    useColorScheme
+} from 'react-native'
 
-export default function HomeScreen() {
+
+export default function OnlinePage() {
+
+    return <OnlineFilePage />
+}
+
+function OnlineFilePage() {
+    const [items, setItems] = useState<any[]>([])
+    const [dirs, setDirs] = useState<string[]>([])
+    const [loading, setLoading] = useState(false)
+    const path = useMemo(() => dirs.join('/'), [dirs])
+    const theme = useColorScheme() || 'light'
+
+    const loadList = useCallback(async () => {
+        setLoading(true)
+        const query = encodeURIComponent(path)
+        const url =
+            dirs.length > 0
+                ? `http://192.168.1.45:8000/api/list?path=${query}`
+                : 'http://192.168.1.45:8000/api/list'
+
+        try {
+            const res = await fetch(url)
+            const json = await res.json()
+            setItems(json)
+        } catch (e) {
+            console.warn('Online list error:', e)
+        } finally {
+            setLoading(false)
+        }
+    }, [path])
+
+    useEffect(() => {
+        loadList()
+    }, [loadList])
+
+    const handleDownload = async (item: any) => {
+        setLoading(true)
+        const filePath = dirs.length > 0 ? path + '/' + item.name : item.name
+        try {
+            const url = `http://192.168.1.45:8000/api/file?path=${encodeURIComponent(filePath)}`
+            const output = await File.downloadFileAsync(url, DATA_DIR)
+                .then(() => setLoading(false))
+                .catch(() => setLoading(false))
+        } catch (e) {
+            console.warn('Download error:', e)
+        }
+    }
+
+    const handleOpenDir = (item: any) => {
+        setDirs([...dirs, item.name])
+        loadList()
+    }
+
+    const handleBack = useCallback(() => {
+        setDirs(dirs.slice(0, dirs.length - 1))
+        loadList()
+    }, [setDirs, dirs, loadList])
+
+    useEffect(() => {
+        const subscription = BackHandler.addEventListener(
+            'hardwareBackPress',
+            () => {
+                if (dirs.length > 0) {
+                    handleBack()
+                    return true
+                }
+                return false
+            },
+        )
+
+        return () => subscription.remove()
+    }, [handleBack, dirs])
+
     return (
-        <ParallaxScrollView
-            headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-            headerImage={
-                <Image
-                    source={require('@/assets/images/partial-react-logo.png')}
-                    style={styles.reactLogo}
-                />
-            }
-        >
-            <ThemedView style={styles.titleContainer}>
-                <ThemedText type="title">Welcome!</ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.stepContainer}>
-                <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-                <ThemedText>
-                    Edit{' '}
-                    <ThemedText type="defaultSemiBold">
-                        app/(tabs)/index.tsx
-                    </ThemedText>{' '}
-                    to see changes. Press{' '}
-                    <ThemedText type="defaultSemiBold">
-                        {Platform.select({
-                            ios: 'cmd + d',
-                            android: 'cmd + m',
-                            web: 'F12',
-                        })}
-                    </ThemedText>{' '}
-                    to open developer tools.
+        <ThemedView style={{ flex: 1 }}>
+            <ThemedView
+                style={{
+                    padding: 12,
+                    borderBottomWidth: 1,
+                    borderColor: '#E5E7EB',
+                }}
+            >
+                <ThemedView
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 8,
+                    }}
+                >
+                    <TouchableOpacity onPress={handleBack}>
+                        <Icon
+                            type="Ionicons"
+                            size={24}
+                            name={'arrow-back'}
+                            color={Colors[theme]['tint']}
+                        />
+                    </TouchableOpacity>
+                    <ThemedText style={{ fontWeight: '600' }}>
+                        Online files
+                    </ThemedText>
+                </ThemedView>
+                <ThemedText style={{ color: '#6B7280', marginTop: 4 }}>
+                    Path: /{path}
                 </ThemedText>
             </ThemedView>
-            <ThemedView style={styles.stepContainer}>
-                <Link href="/modal">
-                    <Link.Trigger>
-                        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-                    </Link.Trigger>
-                    <Link.Preview />
-                    <Link.Menu>
-                        <Link.MenuAction
-                            title="Action"
-                            icon="cube"
-                            onPress={() => alert('Action pressed')}
-                        />
-                        <Link.MenuAction
-                            title="Share"
-                            icon="square.and.arrow.up"
-                            onPress={() => alert('Share pressed')}
-                        />
-                        <Link.Menu title="More" icon="ellipsis">
-                            <Link.MenuAction
-                                title="Delete"
-                                icon="trash"
-                                destructive
-                                onPress={() => alert('Delete pressed')}
-                            />
-                        </Link.Menu>
-                    </Link.Menu>
-                </Link>
 
-                <ThemedText>
-                    {`Tap the Explore tab to learn more about what's included in this starter app.`}
-                </ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.stepContainer}>
-                <ThemedText type="subtitle">
-                    Step 3: Get a fresh start
-                </ThemedText>
-                <ThemedText>
-                    {`When you're ready, run `}
-                    <ThemedText type="defaultSemiBold">
-                        npm run reset-project
-                    </ThemedText>{' '}
-                    to get a fresh{' '}
-                    <ThemedText type="defaultSemiBold">app</ThemedText>{' '}
-                    directory. This will move the current{' '}
-                    <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-                    <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-                </ThemedText>
-            </ThemedView>
-        </ParallaxScrollView>
+            {loading ? (
+                <ThemedView>
+                    <ThemedText>Loading...</ThemedText>
+                </ThemedView>
+            ) : (
+                <FlatList
+                    data={items}
+                    keyExtractor={(item, idx) => `${item.name}-${idx}`}
+                    contentContainerStyle={{ padding: 12 }}
+                    renderItem={({ item }) => (
+                        <ThemedView style={styles.fileItem}>
+                            <ThemedView>
+                                {item.isDirectory ? (
+                                    <Icon
+                                        type="FontAwesome"
+                                        size={24}
+                                        name={'folder'}
+                                        color={Colors[theme]['icon']}
+                                    />
+                                ) : (
+                                    <Icon
+                                        type="FontAwesome"
+                                        size={24}
+                                        name={'file'}
+                                        color={Colors[theme]['icon']}
+                                    />
+                                )}
+                            </ThemedView>
+                            <ThemedView style={{ flex: 1 }}>
+                                <ThemedText style={styles.fileName}>
+                                    {item.name}
+                                </ThemedText>
+                                <ThemedText style={styles.fileMeta}>
+                                    {item.isDirectory
+                                        ? 'Directory'
+                                        : `${item.size} bytes`}
+                                </ThemedText>
+                            </ThemedView>
+
+                            {item.isDirectory ? (
+                                <TouchableOpacity
+                                    onPress={() => handleOpenDir(item)}
+                                >
+                                    <Icon
+                                        type="FontAwesome"
+                                        size={24}
+                                        name={'folder-open'}
+                                        color={Colors[theme]['tint']}
+                                    />
+                                </TouchableOpacity>
+                            ) : (
+                                <TouchableOpacity
+                                    onPress={() => handleDownload(item)}
+                                >
+                                    <Icon
+                                        type="Feather"
+                                        size={24}
+                                        name={'download'}
+                                        color={Colors[theme]['tint']}
+                                    />
+                                </TouchableOpacity>
+                            )}
+                        </ThemedView>
+                    )}
+                />
+            )}
+        </ThemedView>
     )
 }
 
@@ -107,4 +207,16 @@ const styles = StyleSheet.create({
         left: 0,
         position: 'absolute',
     },
+    fileItem: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        padding: 6,
+        borderRadius: 4,
+        marginBottom: 10,
+    },
+    fileName: { fontWeight: '600', fontSize: 16 },
+    fileMeta: { color: '#6B7280', marginTop: 4 },
+    fileActions: { flexDirection: 'row', marginLeft: 12 },
 })

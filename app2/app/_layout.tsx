@@ -1,3 +1,4 @@
+import { Header } from '@/components/my/header'
 import {
     DarkTheme,
     DefaultTheme,
@@ -19,6 +20,7 @@ export default function RootLayout() {
         <ThemeProvider
             value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
         >
+            <Header isOnline={true} />
             <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen
@@ -26,7 +28,12 @@ export default function RootLayout() {
                     options={{ presentation: 'modal', title: 'Modal' }}
                 />
             </Stack>
-            <StatusBar style="auto" />
+            <StatusBar
+                style="auto"
+                translucent={false}
+                hidden={false}
+                animated
+            />
         </ThemeProvider>
     )
 }

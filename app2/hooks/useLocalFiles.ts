@@ -1,18 +1,17 @@
-import { File, Directory, Paths } from 'expo-file-system';
+import { File, Directory, Paths } from 'expo-file-system'
 import { useState, useEffect, useCallback } from 'react'
-import { Alert } from 'react-native';
+import { Alert } from 'react-native'
 
-const DATA_DIR = new Directory(Paths.cache, 'asdasdwasd')
+export const DATA_DIR = new Directory(Paths.document, 'asdasdwasd')
 if (!DATA_DIR.exists) {
-    DATA_DIR.create({intermediates: true})
+    DATA_DIR.create({ intermediates: true })
 }
-
 
 export type LocalFile = {
     name: string
-    file: File,
-    size?: number 
-    modified?: number 
+    file: File
+    size?: number
+    modified?: number
 }
 
 export function useLocalFiles() {
@@ -26,9 +25,8 @@ export function useLocalFiles() {
             setError(null)
 
             const files = DATA_DIR.list()
-            const detailed: LocalFile[] = 
-                files.map((file) => {
-                    console.log("типо файл", file)
+            const detailed: LocalFile[] = files
+                .map((file) => {
                     if (Paths.info(file.uri).isDirectory) {
                         return
                     }
@@ -40,18 +38,24 @@ export function useLocalFiles() {
                         size: info.size,
                         modified: info.modificationTime,
                     }
-                }).filter((val) => val != undefined)
+                })
+                .filter((val) => val != undefined)
+                .sort(
+                    (a, b) =>
+                        -(
+                            (a.file.creationTime || 0) -
+                            (b.file.creationTime || 0)
+                        ),
+                )
 
-            console.log("всего файлов", detailed)
             setFiles(detailed)
+            // const test_file = detailed[0]
+            // setFiles(Array(1000).fill(0).map((_, i) => ({...test_file, name: `${i}.jpg`})))
         } catch (e) {
-            console.log("ошибочкай", e)
             setError(e)
         } finally {
             setLoading(false)
         }
-        console.log('files', DATA_DIR)
-        console.log('files', files)
     }, [])
 
     useEffect(() => {

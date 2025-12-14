@@ -1,15 +1,21 @@
-import { ThemedView } from '@/components/view';
-import { LocalFile, useLocalFiles } from '@/hooks/useLocalFiles';
-import * as Sharing from 'expo-sharing';
-import React, { useState } from 'react';
-import { Alert, Button, FlatList, Text, View } from 'react-native';
-import { LocalFileItem } from '../../components/my/localFileItem';
-import { RenameModal } from '../../components/my/renameModal';
+import { ThemedView } from '@/components/view'
+import { LocalFile, useLocalFiles } from '@/hooks/useLocalFiles'
+import * as Sharing from 'expo-sharing'
+import React, { useEffect, useState } from 'react'
+import { FlatList, Text } from 'react-native'
+import { LocalFileItem } from '../../components/my/localFileItem'
+import { RenameModal } from '../../components/my/renameModal'
 
 export default function LocalPage() {
-    const { files, loading, error, refresh: readFiles, dir: DATA_DIR } = useLocalFiles()
-    const [renameTarget, setRenameTarget] = useState < LocalFile | null>(null)
+    const { files, loading, error, refresh: readFiles } = useLocalFiles()
+    const [renameTarget, setRenameTarget] = useState<LocalFile | null>(null)
     const [isRenameModalVisible, setRenameModalVisible] = useState(false)
+    const [isError, setIsError] = useState(false)
+
+    useEffect(() => {
+        let a = setInterval(readFiles, 10_000)
+        return () => clearInterval(a)
+    }, [readFiles])
 
     const handleRename = (item: LocalFile) => {
         setRenameTarget(item)
@@ -18,38 +24,31 @@ export default function LocalPage() {
 
     const handleDelete = (item: LocalFile) => {
         item.file.delete()
+        readFiles()
     }
 
     const handleShare = async (item: LocalFile) => {
         try {
-            console.log('item share', item)
             await Sharing.shareAsync(item.file.uri)
-        } catch (e) {
-            Alert.alert('Share error', e.message || String(e))
+        } catch (_error) {
+            setIsError(true)
         }
     }
 
     const handleSaveRename = (newName: string) => {
         if (!newName || !renameTarget) return
-        renameTarget.file.rename(newName)
+        try {
+            renameTarget.file.rename(newName)
+        } catch (error) {
+            setIsError(true)
+        }
         setRenameTarget(null)
         setRenameModalVisible(false)
         readFiles()
     }
 
-    const addFile = () => {
-        // const file = new File(DATA_DIR, 'new-file.txt')
-        // file.create({ intermediates: true })
-        const file = DATA_DIR.createFile('new-file2.txt', 'Hello world!')
-        file.write('hello world 32132123')
-        // const file = new File(DATA_DIR + '/new-file.txt')
-        // file.create()
-        console.log('!!!!')
-        readFiles()
-    }
-
     return (
-        <View style={{ flex: 1 }}>
+        <ThemedView style={{ flex: 1, paddingTop: 14 }}>
             <FlatList
                 data={files}
                 keyExtractor={(item) => item.name}
@@ -66,7 +65,6 @@ export default function LocalPage() {
                     />
                 )}
             />
-
             <RenameModal
                 visible={isRenameModalVisible}
                 item={renameTarget}
@@ -76,9 +74,6 @@ export default function LocalPage() {
                 }}
                 onSave={handleSaveRename}
             />
-            <ThemedView>
-                <Button onPress={addFile} title='add'/>
-            </ThemedView>
-        </View>
+        </ThemedView>
     )
 }

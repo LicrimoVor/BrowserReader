@@ -1,36 +1,38 @@
-import { styles } from '@/constants/style'
+import { Colors } from '@/constants/theme'
 import React from 'react'
-import { StatusBar, Text, View } from 'react-native'
+import { StyleSheet, useColorScheme, View } from 'react-native'
+import { ThemedText } from '../text'
 
-// Optional: better network detection
-// import NetInfo from '@react-native-community/netinfo';
-
-// ---------- Header ----------
 export function Header({ isOnline }: { isOnline: boolean }) {
+    const colorScheme = useColorScheme() ?? 'light'
+
     return (
-        <View style={styles.header}>
-            <StatusBar
-                barStyle={isOnline ? 'light-content' : 'dark-content'}
-                backgroundColor={isOnline ? '#2563eb' : '#374151'}
+        <View
+            style={[
+                styles.headerInner,
+                { backgroundColor: Colors[colorScheme]['header'] },
+            ]}
+        >
+            <View
+                style={[
+                    styles.statusDot,
+                    {
+                        backgroundColor: isOnline ? '#34D399' : '#EF4444',
+                    },
+                ]}
             />
-            <View style={styles.headerInner}>
-                <View style={styles.statusDotWrap}>
-                    <View
-                        style={[
-                            styles.statusDot,
-                            {
-                                backgroundColor: isOnline
-                                    ? '#34D399'
-                                    : '#EF4444',
-                            },
-                        ]}
-                    />
-                    <Text style={styles.statusText}>
-                        {isOnline ? 'Online' : 'Offline'}
-                    </Text>
-                </View>
-                <Text style={styles.title}>My RN Files App</Text>
-            </View>
+            <ThemedText style={[styles.title]}>BrowserReader</ThemedText>
         </View>
     )
 }
+
+export const styles = StyleSheet.create({
+    headerInner: {
+        padding: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    statusDot: { width: 14, height: 14, borderRadius: 6, marginRight: 8 },
+    statusText: { marginRight: 12 },
+    title: { fontSize: 18, fontWeight: '600' },
+})
