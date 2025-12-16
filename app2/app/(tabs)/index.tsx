@@ -5,22 +5,24 @@ import { ThemedView } from '@/components/view'
 import { URL_API } from '@/constants/core'
 import { Colors } from '@/constants/theme'
 import { DATA_DIR } from '@/hooks/useLocalFiles'
-import { File } from 'expo-file-system'
+import { createDownloadResumable } from 'expo-file-system/legacy'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
     BackHandler,
     FlatList,
     StyleSheet,
     TouchableOpacity,
-    useColorScheme
+    useColorScheme,
 } from 'react-native'
-
+import { ProgressBar } from 'react-native-paper'
 
 export default function OnlineFilePage() {
     const [items, setItems] = useState<any[]>([])
     const [dirs, setDirs] = useState<string[]>([])
     const [loading, setLoading] = useState(false)
+    const [progresses, setProgress] = useState<Record<string, number>>({})
     const [isOnline, setIsOnline] = useState(false)
+    const [error, setError] = useState<any>(null)
     const path = useMemo(() => dirs.join('/'), [dirs])
     const theme = useColorScheme() || 'light'
 
@@ -29,7 +31,7 @@ export default function OnlineFilePage() {
         const query = encodeURIComponent(path)
         const url =
             dirs.length > 0
-                ? `${URL_API}/list?path=${query}`
+                ? `${URL_API}/list?path=/${query}`
                 : `${URL_API}/list`
 
         try {
@@ -50,23 +52,40 @@ export default function OnlineFilePage() {
 
     const handleDownload = async (item: any) => {
         setLoading(true)
+        setError(false)
         const filePath = dirs.length > 0 ? path + '/' + item.name : item.name
         try {
-            const url = `${URL_API}/file?path=${encodeURIComponent(filePath)}`
-            const output = await File.downloadFileAsync(url, DATA_DIR)
-                .then(() => setLoading(false))
-                .catch(() => setLoading(false))
-        } catch (e) {
+            const url = `${URL_API}/file?path=/${encodeURIComponent(filePath)}`
+            const a = DATA_DIR.uri + item.name
+            await createDownloadResumable(
+                url,
+                a,
+                {},
+                ({ totalBytesWritten, totalBytesExpectedToWrite }) => {
+                    if (totalBytesExpectedToWrite > 0) {
+                        const percent =
+                            totalBytesWritten / totalBytesExpectedToWrite
+                        setProgress((prev) => ({
+                            ...prev,
+                            [item.name]: percent,
+                        }))
+                    }
+                },
+            ).downloadAsync()
+        } catch (e) { 
+            setError(true)
+        }
+        finally {
             setLoading(false)
         }
     }
 
     const handleOpenDir = useCallback((item: any) => {
-        setDirs(prev => [...prev, item.name])
+        setDirs((prev) => [...prev, item.name])
     }, [])
 
     const handleBack = useCallback(() => {
-        setDirs(prev => prev.slice(0, -1))
+        setDirs((prev) => prev.slice(0, -1))
     }, [])
 
     useEffect(() => {
@@ -110,10 +129,14 @@ export default function OnlineFilePage() {
                     </TouchableOpacity>
                     <StatusCircle isActive={isOnline} />
                     <ThemedText style={{ fontWeight: '600' }}>
-                        Статус: {loading ? 'Загрузка' : (isOnline ? 'Онлайн' : 'Оффлайн')}
+                        Статус:{' '}
+                        {error ? 'Ошибка' : loading ? 'Загрузка' : isOnline ? 'Онлайн' : 'Оффлайн'}
                     </ThemedText>
 
-                    <TouchableOpacity onPress={loadList} style={{ flex: 1, alignItems: 'flex-end' }}>
+                    <TouchableOpacity
+                        onPress={loadList}
+                        style={{ flex: 1, alignItems: 'flex-end' }}
+                    >
                         <Icon
                             type="Ionicons"
                             size={24}
@@ -126,6 +149,27 @@ export default function OnlineFilePage() {
                     Путь: /{path}
                 </ThemedText>
             </ThemedView>
+            {Object.keys(progresses).length > 0 && (
+                <ThemedView
+                    style={{
+                        padding: 12,
+                        borderBottomWidth: 1,
+                        borderColor: '#E5E7EB',
+                    }}
+                >
+                    {Object.keys(progresses).map((name) => (
+                        <ThemedView
+                            key={name}
+                            style={{ gap: 12 }}
+                        >
+                            <ThemedText>{name}</ThemedText>
+                            <ProgressBar
+                                progress={progresses[name]}
+                            />
+                        </ThemedView>
+                    ))}
+                </ThemedView>
+            )}
 
             {items.length === 0 && !loading && (
                 <ThemedView>

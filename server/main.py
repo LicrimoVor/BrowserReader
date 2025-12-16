@@ -1,10 +1,14 @@
+import asyncio
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from typing import List
 import os
 
 app = FastAPI()
+
+CHUNK_SIZE = 1024 * 64  # 64 KB
+DELAY = 0.1  # 0.1 сек
 
 
 class FileInfo(BaseModel):
@@ -14,6 +18,13 @@ class FileInfo(BaseModel):
     lastModified: float
 
 
+async def slow_file_reader(path: str):
+    with open(path, "rb") as f:
+        while chunk := f.read(CHUNK_SIZE):
+            yield chunk
+            await asyncio.sleep(DELAY)
+
+
 @app.get("/api/list", response_model=List[FileInfo])
 def list_files(path: str = "."):
     if not os.path.exists(path):
@@ -21,6 +32,11 @@ def list_files(path: str = "."):
 
     if not os.path.isdir(path):
         raise HTTPException(status_code=400, detail="Path must be a directory")
+
+    print(path)
+    if path.startswith("/"):
+        print(path)
+        path = path[1:]
 
     result = []
     for name in os.listdir(path):
@@ -47,3 +63,8 @@ def get_file(path: str):
         raise HTTPException(status_code=400, detail="Path is a directory")
 
     return FileResponse(path, filename=os.path.basename(path))
+    # return StreamingResponse(
+    #     slow_file_reader(path),
+    #     media_type="application/octet-stream",
+    #     headers={"Content-Disposition": "attachment; filename=large_file.zip"},
+    # )

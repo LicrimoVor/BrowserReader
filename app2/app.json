@@ -14,7 +14,10 @@
         "android": {
             "edgeToEdgeEnabled": true,
             "predictiveBackGestureEnabled": false,
-            "permissions": ["android.permission.ACCESS_FINE_LOCATION"],
+            "permissions": [
+                "android.permission.ACCESS_FINE_LOCATION",
+                "INTERNET"
+            ],
             "package": "com.anonymous.BrowserReader"
         },
         "web": {
@@ -22,6 +25,14 @@
             "favicon": "./assets/images/icon.png"
         },
         "plugins": [
+            [
+                "expo-build-properties",
+                {
+                    "android": {
+                        "usesCleartextTraffic": true
+                    }
+                }
+            ],
             "expo-router",
             [
                 "expo-splash-screen",
