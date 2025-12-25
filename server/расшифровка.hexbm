@@ -37,6 +37,18 @@
             }
         },
         {
+            "color": 1341735659,
+            "comment": "",
+            "highlightVisible": true,
+            "id": 11,
+            "locked": true,
+            "name": "Время сс мм чч [0x28 - 0x2A]",
+            "region": {
+                "address": 40,
+                "size": 3
+            }
+        },
+        {
             "color": 1325400319,
             "comment": "02 00 - левая -\n01 80 - левая +\n02 20 - правая -\n01 А0 - правая +",
             "highlightVisible": true,

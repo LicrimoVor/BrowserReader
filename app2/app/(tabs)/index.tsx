@@ -2,10 +2,9 @@ import { Icon } from '@/components/icon'
 import { ThemedText } from '@/components/text'
 import { StatusCircle } from '@/components/ui/status'
 import { ThemedView } from '@/components/view'
-import { URL_API } from '@/constants/core'
-import { Colors } from '@/constants/theme'
-import { DATA_DIR } from '@/hooks/useLocalFiles'
-import { parseBytes } from '@/libs/parse_bytes'
+import { FILE_DIR, URL_API } from '@/core/const'
+import { Colors } from '@/core/theme'
+import { parseBytes } from '@/libs/parseBytes'
 import { File } from 'expo-file-system'
 import { createDownloadResumable } from 'expo-file-system/legacy'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -17,7 +16,6 @@ import {
     useColorScheme,
 } from 'react-native'
 import { ProgressBar } from 'react-native-paper'
-
 
 export default function OnlineFilePage() {
     const [items, setItems] = useState<any[]>([])
@@ -59,7 +57,7 @@ export default function OnlineFilePage() {
         const filePath = dirs.length > 0 ? path + '/' + item.name : item.name
         try {
             const url = `${URL_API}/file?path=${encodeURIComponent(filePath)}`
-            const a = DATA_DIR.uri + item.name
+            const a = FILE_DIR.uri + item.name
             const res = await createDownloadResumable(
                 url,
                 a,
@@ -85,11 +83,9 @@ export default function OnlineFilePage() {
             const bytes = oFile.readBytes(160)
             oFile.close()
             parseBytes(bytes)
-
-        } catch (e) { 
+        } catch (e) {
             setError(true)
-        }
-        finally {
+        } finally {
             setLoading(false)
         }
     }
@@ -149,7 +145,13 @@ export default function OnlineFilePage() {
                     <StatusCircle isActive={isOnline} />
                     <ThemedText style={{ fontWeight: '600' }}>
                         Статус:{' '}
-                        {error ? 'Ошибка' : loading ? 'Загрузка' : isOnline ? 'Подключено' : 'Отключено'}
+                        {error
+                            ? 'Ошибка'
+                            : loading
+                              ? 'Загрузка'
+                              : isOnline
+                                ? 'Подключено'
+                                : 'Отключено'}
                     </ThemedText>
 
                     <TouchableOpacity
@@ -177,14 +179,9 @@ export default function OnlineFilePage() {
                     }}
                 >
                     {Object.keys(progresses).map((name) => (
-                        <ThemedView
-                            key={name}
-                            style={{ gap: 12 }}
-                        >
+                        <ThemedView key={name} style={{ gap: 12 }}>
                             <ThemedText>{name}</ThemedText>
-                            <ProgressBar
-                                progress={progresses[name]}
-                            />
+                            <ProgressBar progress={progresses[name]} />
                         </ThemedView>
                     ))}
                 </ThemedView>

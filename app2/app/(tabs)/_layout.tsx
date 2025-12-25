@@ -4,7 +4,7 @@ import { useColorScheme } from 'react-native'
 
 import { Icon } from '@/components/icon'
 import { HapticTab } from '@/components/tabs'
-import { Colors } from '@/constants/theme'
+import { Colors } from '@/core/theme'
 
 export default function TabLayout() {
     const colorScheme = useColorScheme()
@@ -32,7 +32,7 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name="local"
+                name="files"
                 options={{
                     title: 'МРМ',
                     tabBarIcon: ({ color }) => (
@@ -40,6 +40,20 @@ export default function TabLayout() {
                             type="AntDesign"
                             size={28}
                             name="file-text"
+                            color={color}
+                        />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="location"
+                options={{
+                    title: 'Трекер',
+                    tabBarIcon: ({ color }) => (
+                        <Icon
+                            type="Entypo"
+                            size={28}
+                            name="map"
                             color={color}
                         />
                     ),

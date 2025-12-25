@@ -1,5 +1,7 @@
 import { ThemedText } from '@/components/text'
+import { DeleteModal } from '@/components/ui/deleteModal'
 import { ThemedView } from '@/components/view'
+import { FILE_DIR } from '@/core/const'
 import { LocalFile, useLocalFiles } from '@/hooks/useLocalFiles'
 import * as Sharing from 'expo-sharing'
 import React, { useEffect, useState } from 'react'
@@ -7,10 +9,14 @@ import { FlatList } from 'react-native'
 import { LocalFileItem } from '../../components/ui/localFileItem'
 import { RenameModal } from '../../components/ui/renameModal'
 
-export default function LocalPage() {
-    const { files, loading, error, refresh: readFiles } = useLocalFiles()
-    const [renameTarget, setRenameTarget] = useState<LocalFile | null>(null)
+export default function FilesPage() {
+    const {
+        files,
+        refresh: readFiles,
+    } = useLocalFiles(FILE_DIR)
+    const [fileTarget, setFileTarget] = useState<LocalFile | null>(null)
     const [isRenameModalVisible, setRenameModalVisible] = useState(false)
+    const [isDeleteModalVisible, setDeleteModalVisible] = useState(false)
     const [isError, setIsError] = useState(false)
 
     useEffect(() => {
@@ -19,13 +25,13 @@ export default function LocalPage() {
     }, [readFiles])
 
     const handleRename = (item: LocalFile) => {
-        setRenameTarget(item)
+        setFileTarget(item)
         setRenameModalVisible(true)
     }
 
     const handleDelete = (item: LocalFile) => {
-        item.file.delete()
-        readFiles()
+        setFileTarget(item)
+        setDeleteModalVisible(true)
     }
 
     const handleShare = async (item: LocalFile) => {
@@ -37,13 +43,13 @@ export default function LocalPage() {
     }
 
     const handleSaveRename = (newName: string) => {
-        if (!newName || !renameTarget) return
+        if (!newName || !fileTarget) return
         try {
-            renameTarget.file.rename(newName)
+            fileTarget.file.rename(newName)
         } catch (error) {
             setIsError(true)
         }
-        setRenameTarget(null)
+        setFileTarget(null)
         setRenameModalVisible(false)
         readFiles()
     }
@@ -70,12 +76,28 @@ export default function LocalPage() {
             />
             <RenameModal
                 visible={isRenameModalVisible}
-                item={renameTarget}
+                item={fileTarget}
                 onCancel={() => {
                     setRenameModalVisible(false)
-                    setRenameTarget(null)
+                    setFileTarget(null)
                 }}
                 onSave={handleSaveRename}
+            />
+            <DeleteModal
+                visible={isDeleteModalVisible}
+                onCancel={() => {
+                    setDeleteModalVisible(false)
+                    setFileTarget(null)
+                }}
+                onDelete={() => {
+                    setDeleteModalVisible(false)
+                    if (!fileTarget) {
+                        return
+                    }
+                    fileTarget.file.delete()
+                    readFiles()
+                    setFileTarget(null)
+                }}
             />
         </ThemedView>
     )

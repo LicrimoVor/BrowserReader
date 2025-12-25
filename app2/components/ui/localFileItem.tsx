@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme'
+import { Colors } from '@/core/theme'
 import { LocalFile } from '@/hooks/useLocalFiles'
 import React from 'react'
 import {
@@ -14,12 +14,15 @@ import { ThemedView } from '../view'
 
 type Props = {
     item: LocalFile
+    isSelect?: boolean
     onRename: any
     onDelete: any
     onShare: any
 }
 
-function formatCustom(date: Date) {
+function formatCustom(creationTime: number) {
+    const date = new Date(creationTime)
+
     const pad = (n: number) => String(n).padStart(2, '0')
     const year = date.getFullYear()
     const month = pad(date.getMonth() + 1) // getMonth() is 0-indexed
@@ -32,21 +35,21 @@ function formatCustom(date: Date) {
 }
 
 // ---------- Local file item ----------
-export function LocalFileItem({ item, onRename, onDelete, onShare }: Props) {
-    const data = new Date(item.file.creationTime || 0)
+export function LocalFileItem({ item, onRename, onDelete, onShare, isSelect=false }: Props) {
     const colorScheme = useColorScheme() ?? 'light'
 
     return (
         <ThemedView
             style={[
                 styles.fileItem,
+                isSelect && { borderColor: Colors[colorScheme]['tint'], borderWidth: 2, padding: 10 },
                 { backgroundColor: Colors[colorScheme]['sideback'] },
             ]}
         >
             <View style={{ flex: 1 }}>
                 <ThemedText style={styles.fileName}>{item.name}</ThemedText>
-                <Text style={styles.fileMeta}>{`${item.size} bytes`}</Text>
-                <Text style={styles.fileMeta}>{formatCustom(data)}</Text>
+                <Text style={styles.fileMeta}>{`${item.size|| "- - -"} bytes`}</Text>
+                <Text style={styles.fileMeta}>{item.file.creationTime ? formatCustom(item.file.creationTime): "- - -"}</Text>
             </View>
             <View style={[styles.fileActions, { gap: 20 }]}>
                 <TouchableOpacity onPress={() => onRename(item)}>

@@ -1,7 +1,7 @@
 export const parseBytes = (bytes: Uint8Array<ArrayBuffer>) => {
-    const dd = bytes[0x2C].toString(16)
-    const mm = bytes[0x2D].toString(16)
-    const yy = bytes[0x2E].toString(16)
+    const dd = bytes[0x2c].toString(16)
+    const mm = bytes[0x2d].toString(16)
+    const yy = bytes[0x2e].toString(16)
 
     const id = bytes[0x38] + bytes[0x39]
     const km_start = bytes[0x70] + bytes[0x71] * 256

@@ -1,37 +1,20 @@
-import { Colors } from '@/core/theme'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import {
     Modal,
     StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    useColorScheme,
+    TouchableOpacity
 } from 'react-native'
 import { ThemedText } from '../text'
 import { ThemedView } from '../view'
 
-export function RenameModal({ visible, item, onCancel, onSave }: any) {
-    const [value, setValue] = useState(item ? item.name : '')
-    const theme = useColorScheme() || 'light'
-
-    useEffect(() => {
-        setValue(item ? item.name : '')
-    }, [item])
-
+export function DeleteModal({ visible, onCancel, onDelete }: any) {
     return (
         <Modal visible={visible} transparent animationType="fade">
             <ThemedView style={styles.modalOverlay}>
                 <ThemedView style={styles.modalBox}>
                     <ThemedText style={styles.modalTitle}>
-                        Переимновать файл
+                        Удалить файл?
                     </ThemedText>
-                    <TextInput
-                        style={[styles.input, { color: Colors[theme]['text'] }]}
-                        value={value}
-                        onChangeText={setValue}
-                        placeholder="Новое имя файла"
-                        autoFocus
-                    />
                     <ThemedView style={styles.modalButtons}>
                         <TouchableOpacity
                             style={styles.modalBtn}
@@ -41,10 +24,10 @@ export function RenameModal({ visible, item, onCancel, onSave }: any) {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.modalBtn, styles.modalSave]}
-                            onPress={() => onSave(value)}
+                            onPress={onDelete}
                         >
                             <ThemedText style={{ color: '#fff' }}>
-                                Сохранить
+                                Удалить
                             </ThemedText>
                         </TouchableOpacity>
                     </ThemedView>

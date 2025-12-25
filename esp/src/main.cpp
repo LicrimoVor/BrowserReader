@@ -5,15 +5,15 @@
 #include "web_server.h"
 #include "sd_utils.h"
 
-// #define SD_MISO 13
-// #define SD_MOSI 12
-// #define SD_SCK 11
-// #define SD_CS 10
+#define SD_MISO 37
+#define SD_MOSI 39
+#define SD_SCK 38
+#define SD_CS 40
 
-#define SD_MOSI 11
-#define SD_MISO 13
-#define SD_SCK 12
-#define SD_CS 10
+// #define SD_MISO 13
+// #define SD_MOSI 11
+// #define SD_SCK 12
+// #define SD_CS 10
 
 SDCard2USB dev;
 

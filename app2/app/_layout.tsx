@@ -1,5 +1,10 @@
 import { Header } from '@/components/ui/header'
-import { Colors } from '@/constants/theme'
+import { LOCATION_TASK_TRACK_KM } from '@/core/tasks'
+import { Colors } from '@/core/theme'
+import { useInitialEffect } from '@/hooks/useInitialEffect'
+import { buildTrackKm } from '@/libs/buildTrackKm'
+import { requestLocationPermissions } from '@/libs/locations'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
     DarkTheme,
     DefaultTheme,
@@ -17,6 +22,21 @@ export const unstable_settings = {
 
 export default function RootLayout() {
     const colorScheme = useColorScheme() || 'light'
+    useInitialEffect(() => {
+        ;(async () => {
+            try {
+                await requestLocationPermissions()
+                const trackKm = await buildTrackKm()
+                await AsyncStorage.setItem(
+                    LOCATION_TASK_TRACK_KM,
+                    JSON.stringify(trackKm),
+                )
+                console.log('Complete inited')
+            } catch (e) {
+                console.error(e)
+            }
+        })()
+    })
 
     return (
         <ThemeProvider

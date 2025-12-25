@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme'
+import { Colors } from '@/core/theme'
 import { Image } from 'expo-image'
 import React from 'react'
 import { StyleSheet, useColorScheme } from 'react-native'
