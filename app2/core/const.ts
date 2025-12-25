@@ -1,7 +1,7 @@
 import { Directory, Paths, File } from 'expo-file-system'
 
 export const URL_API = __DEV__
-    ? 'http://192.168.168.130:8000/api'
+    ? 'http://192.168.1.45:8000/api'
     : 'http://192.168.4.1:8000/api'
 
 export const LOGS_DIR = new Directory(Paths.document, 'logs')

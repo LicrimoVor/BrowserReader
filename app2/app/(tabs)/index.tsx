@@ -32,7 +32,7 @@ export default function OnlineFilePage() {
         const query = encodeURIComponent(path)
         const url =
             dirs.length > 0
-                ? `${URL_API}/list?path=${query}`
+                ? `${URL_API}/list?path=/${query}`
                 : `${URL_API}/list`
 
         try {
@@ -56,7 +56,7 @@ export default function OnlineFilePage() {
         setError(false)
         const filePath = dirs.length > 0 ? path + '/' + item.name : item.name
         try {
-            const url = `${URL_API}/file?path=${encodeURIComponent(filePath)}`
+            const url = `${URL_API}/file?path=/${encodeURIComponent(filePath)}`
             const a = FILE_DIR.uri + item.name
             const res = await createDownloadResumable(
                 url,
@@ -82,7 +82,10 @@ export default function OnlineFilePage() {
             const oFile = await file.open()
             const bytes = oFile.readBytes(160)
             oFile.close()
-            parseBytes(bytes)
+            const { dd, mm, left_rigth, km_start, id } = parseBytes(bytes)
+            file.rename(
+                `${dd.padStart(2, '0')}${mm.padStart(2, '0')}_${left_rigth}_${km_start}-${km_start}_${id}.rdm`,
+            )
         } catch (e) {
             setError(true)
         } finally {
@@ -122,7 +125,7 @@ export default function OnlineFilePage() {
         <ThemedView style={{ flex: 1 }}>
             <ThemedView
                 style={{
-                    padding: 12,
+                    padding: 14,
                     borderBottomWidth: 1,
                     borderColor: '#E5E7EB',
                 }}
@@ -137,22 +140,34 @@ export default function OnlineFilePage() {
                     <TouchableOpacity onPress={handleBack}>
                         <Icon
                             type="Ionicons"
-                            size={24}
+                            size={32}
                             name={'arrow-back'}
                             color={Colors[theme]['tint']}
                         />
                     </TouchableOpacity>
-                    <StatusCircle isActive={isOnline} />
-                    <ThemedText style={{ fontWeight: '600' }}>
-                        Статус:{' '}
-                        {error
-                            ? 'Ошибка'
-                            : loading
-                              ? 'Загрузка'
-                              : isOnline
-                                ? 'Подключено'
-                                : 'Отключено'}
+                    <ThemedText
+                        style={{
+                            fontWeight: 'bold',
+                            fontSize: 18,
+                            paddingRight: 16,
+                        }}
+                    >
+                        Статус:
                     </ThemedText>
+                    <ThemedView style={{ alignItems: 'center' }}>
+                        <StatusCircle isActive={isOnline} size={24} />
+                        <ThemedText>
+                            (
+                            {error
+                                ? 'ошибка'
+                                : loading
+                                  ? 'загрузка'
+                                  : isOnline
+                                    ? 'подключено'
+                                    : 'отключено'}
+                            )
+                        </ThemedText>
+                    </ThemedView>
 
                     <TouchableOpacity
                         onPress={onRefresh}
@@ -160,7 +175,7 @@ export default function OnlineFilePage() {
                     >
                         <Icon
                             type="Ionicons"
-                            size={24}
+                            size={32}
                             name={'refresh'}
                             color={Colors[theme]['tint']}
                         />

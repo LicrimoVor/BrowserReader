@@ -9,15 +9,23 @@ import { buildStrokeTrack } from '@/libs/buildStrokeTrack'
 import { Point, TrackKm } from '@/libs/buildTrackKm'
 import { getLocationFromFile } from '@/libs/locations'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useFont } from '@shopify/react-native-skia'
+import { Circle, Text, useFont } from '@shopify/react-native-skia'
 import { useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, useColorScheme } from 'react-native'
 import { Switch } from 'react-native-paper'
-import { CartesianChart, Scatter } from 'victory-native'
+import { SharedValue } from 'react-native-reanimated'
+import {
+    CartesianChart,
+    Scatter,
+    useChartPressState,
+    useChartTransformState,
+} from 'victory-native'
 
-
-const skFontAsset = require('@/assets/Abbieshire.ttf');
+const skFontAsset = require('@/assets/Abbieshire.ttf')
+function ToolTip({ x, y }: { x: SharedValue<number>; y: SharedValue<number> }) {
+    return <Circle cx={x} cy={y} r={8} color="green" />
+}
 
 type AnyPoint = {
     lon: number
@@ -37,8 +45,13 @@ export default function Map() {
     const [isLoading, setIsLoading] = useState(false)
     const [minMaxKm, setMinMaxKm] = useState<[number, number]>([0, 0])
     const [maxTime, setMaxTime] = useState(0)
+    const { state: transformState } = useChartTransformState()
+    const { state: pressState, isActive } = useChartPressState({
+        x: 0,
+        y: { latBase: 0, trackTime: 0, latTrack: 0 },
+    })
     const colorSchema = useColorScheme() || 'light'
-    const font = useFont(skFontAsset, 12);
+    const font = useFont(skFontAsset, 16)
 
     useInitialEffect(() => {
         ;(async () => {
@@ -58,17 +71,18 @@ export default function Map() {
             const { points: basePoints } = JSON.parse(trackKm) as TrackKm
             setBasePoints(basePoints)
 
-            const strokePoints = buildStrokeTrack(trackPoints, basePoints, 0.005)
+            const strokePoints = buildStrokeTrack(
+                trackPoints,
+                basePoints,
+                0.005,
+            )
             setStrokePoints(strokePoints)
             const time_start = data[0].timestamp
             // setMaxTime(time_start - data[data.length - 1].timestamp)
             setMaxTime(data.length)
 
             const minMaxKm = strokePoints.reduce(
-                (acc, p) => [
-                    Math.min(acc[0], p.km),
-                    Math.max(acc[1], p.km),
-                ],
+                (acc, p) => [Math.min(acc[0], p.km), Math.max(acc[1], p.km)],
                 [data[0].km, data[0].km],
             )
             setMinMaxKm(minMaxKm as [number, number])
@@ -132,13 +146,16 @@ export default function Map() {
                 <CartesianChart
                     domain={{
                         x: showScatter ? undefined : minMaxKm,
-                        y: showScatter ? undefined : [0, maxTime]
+                        y: showScatter ? undefined : [0, maxTime],
                     }}
-                    // domainPadding={{ left: 50, right: 50, bottom: 50 }}
+                    transformState={!showScatter ? undefined : transformState}
+                    chartPressState={!showScatter ? pressState : undefined}
                     domainPadding={0}
                     data={allPoints}
                     xKey={showScatter ? 'lon' : 'km'}
-                    yKeys={showScatter ? ['latBase', 'latTrack'] : ['trackTime']}
+                    yKeys={
+                        showScatter ? ['latBase', 'latTrack'] : ['trackTime']
+                    }
                     axisOptions={{
                         lineColor: Colors[colorSchema]['text'],
                         formatXLabel: (km) => `${km} км`,
@@ -162,9 +179,23 @@ export default function Map() {
                                 />
                             </>
                         ) : (
-                                <>
-                                    <Scatter points={points.trackTime} color="blue" radius={1} />
-                                </>
+                            <>
+                                <Scatter
+                                    points={points.trackTime}
+                                    color="blue"
+                                    radius={1}
+                                />
+
+                                {isActive ? (
+                                    <Text
+                                        x={pressState.x.position}
+                                        y={pressState.y.trackTime.position}
+                                        font={font}
+                                        text={String(pressState.x.value.value)}
+                                        color="red"
+                                    />
+                                ) : null}
+                            </>
                         )
                     }
                 </CartesianChart>

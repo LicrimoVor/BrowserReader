@@ -1,7 +1,7 @@
-import { Status } from '@/components/status'
 import { ThemedText } from '@/components/text'
 import { DeleteModal } from '@/components/ui/deleteModal'
 import { LocationFileItem } from '@/components/ui/locationFileItem'
+import { StatusCircle } from '@/components/ui/status'
 import { ThemedView } from '@/components/view'
 import { LOGS_DIR } from '@/core/const'
 import { LOCATION_TASK } from '@/core/tasks'
@@ -160,8 +160,8 @@ export default function LocalPage() {
                             </>
                         ) : (
                             <>
-                                <Status
-                                    isOnline={isLocationStarted}
+                                <StatusCircle
+                                    isActive={isLocationStarted}
                                     size={24}
                                 />
                                 <ThemedText>
@@ -176,14 +176,12 @@ export default function LocalPage() {
                     style={{
                         alignItems: 'center',
                         backgroundColor: Colors[colorScheme]['sideback'],
-                        padding: 12,
+                        padding: 14,
                         borderRadius: 8,
                     }}
                 >
-                    <ThemedText style={{ fontWeight: 'bold', fontSize: 20 }}>
-                        {isLocationStarted
-                            ? 'Остановить трекер'
-                            : 'Запустить трекер'}
+                    <ThemedText style={{ fontWeight: 'bold', fontSize: 32 }}>
+                        {isLocationStarted ? 'Закончить' : '   Начать   '}
                     </ThemedText>
                 </TouchableOpacity>
             </ThemedView>

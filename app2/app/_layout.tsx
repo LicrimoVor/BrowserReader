@@ -1,4 +1,3 @@
-import { Header } from '@/components/ui/header'
 import { LOCATION_TASK_TRACK_KM } from '@/core/tasks'
 import { Colors } from '@/core/theme'
 import { useInitialEffect } from '@/hooks/useInitialEffect'
@@ -53,7 +52,7 @@ export default function RootLayout() {
                     backgroundColor={Colors[colorScheme]['tint']}
                 />
                 <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-                    <Header />
+                    {/* <Header /> */}
                     <Stack>
                         <Stack.Screen
                             name="(tabs)"
@@ -68,6 +67,9 @@ export default function RootLayout() {
                             options={{
                                 title: 'Modal',
                                 headerShown: false,
+                                statusBarAnimation: 'slide',
+                                statusBarHidden: true,
+                                navigationBarHidden: true,
                             }}
                         />
                     </Stack>

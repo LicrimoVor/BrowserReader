@@ -17,7 +17,7 @@ export default function FilesPage() {
     const [isError, setIsError] = useState(false)
 
     useEffect(() => {
-        let a = setInterval(readFiles, 10_000)
+        let a = setInterval(readFiles, 4_000)
         return () => clearInterval(a)
     }, [readFiles])
 
