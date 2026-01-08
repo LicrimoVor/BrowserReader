@@ -5,10 +5,11 @@ import { ThemedView } from '@/components/view'
 import { FILE_DIR, URL_API } from '@/core/const'
 import { Colors } from '@/core/theme'
 import { parseBytes } from '@/libs/parseBytes'
-import { File } from 'expo-file-system'
+import { Directory, File } from 'expo-file-system'
 import { createDownloadResumable } from 'expo-file-system/legacy'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+    ActivityIndicator,
     BackHandler,
     FlatList,
     StyleSheet,
@@ -52,6 +53,9 @@ export default function OnlineFilePage() {
     }, [path, loadList])
 
     const handleDownload = async (item: any) => {
+        let b = await Directory.pickDirectoryAsync()
+        console.log(b)
+
         setLoading(true)
         setError(false)
         const filePath = dirs.length > 0 ? path + '/' + item.name : item.name
@@ -137,12 +141,16 @@ export default function OnlineFilePage() {
                         gap: 16,
                     }}
                 >
-                    <TouchableOpacity onPress={handleBack}>
+                    <TouchableOpacity
+                        onPress={handleBack}
+                        disabled={dirs.length === 0}
+                    >
                         <Icon
                             type="Ionicons"
                             size={32}
                             name={'arrow-back'}
                             color={Colors[theme]['tint']}
+                            style={{ opacity: dirs.length === 0 ? 0.25 : 1 }}
                         />
                     </TouchableOpacity>
                     <ThemedText
@@ -155,7 +163,12 @@ export default function OnlineFilePage() {
                         Статус:
                     </ThemedText>
                     <ThemedView style={{ alignItems: 'center' }}>
-                        <StatusCircle isActive={isOnline} size={24} />
+                        {!loading ? (
+                            <StatusCircle isActive={isOnline} size={24} />
+                        ) : (
+                            <ActivityIndicator size={24} />
+                        )}
+
                         <ThemedText>
                             (
                             {error
@@ -203,7 +216,7 @@ export default function OnlineFilePage() {
             )}
 
             {items.length === 0 && !loading && (
-                <ThemedView>
+                <ThemedView style={{ flex: 1, justifyContent: 'center' }}>
                     <ThemedText style={{ textAlign: 'center' }}>
                         Нет подключения
                     </ThemedText>
@@ -211,72 +224,75 @@ export default function OnlineFilePage() {
             )}
 
             {loading ? (
-                <ThemedView>
+                <ThemedView style={{ flex: 1, justifyContent: 'center' }}>
+                    <ActivityIndicator size={64} />
                     <ThemedText style={{ textAlign: 'center' }}>
                         Загрузка...
                     </ThemedText>
                 </ThemedView>
             ) : (
-                <FlatList
-                    data={items}
-                    keyExtractor={(item, idx) => `${item.name}-${idx}`}
-                    contentContainerStyle={{ padding: 12 }}
-                    renderItem={({ item }) => (
-                        <ThemedView style={styles.fileItem}>
-                            <ThemedView>
+                items.length > 0 && (
+                    <FlatList
+                        data={items}
+                        keyExtractor={(item, idx) => `${item.name}-${idx}`}
+                        contentContainerStyle={{ padding: 12 }}
+                        renderItem={({ item }) => (
+                            <ThemedView style={styles.fileItem}>
+                                <ThemedView>
+                                    {item.isDirectory ? (
+                                        <Icon
+                                            type="FontAwesome"
+                                            size={24}
+                                            name={'folder'}
+                                            color={Colors[theme]['icon']}
+                                        />
+                                    ) : (
+                                        <Icon
+                                            type="FontAwesome"
+                                            size={24}
+                                            name={'file'}
+                                            color={Colors[theme]['icon']}
+                                        />
+                                    )}
+                                </ThemedView>
+                                <ThemedView style={{ flex: 1 }}>
+                                    <ThemedText style={styles.fileName}>
+                                        {item.name}
+                                    </ThemedText>
+                                    <ThemedText style={styles.fileMeta}>
+                                        {item.isDirectory
+                                            ? 'Папка'
+                                            : `${item.size}`}
+                                    </ThemedText>
+                                </ThemedView>
+
                                 {item.isDirectory ? (
-                                    <Icon
-                                        type="FontAwesome"
-                                        size={24}
-                                        name={'folder'}
-                                        color={Colors[theme]['icon']}
-                                    />
+                                    <TouchableOpacity
+                                        onPress={() => handleOpenDir(item)}
+                                    >
+                                        <Icon
+                                            type="FontAwesome"
+                                            size={24}
+                                            name={'folder-open'}
+                                            color={Colors[theme]['tint']}
+                                        />
+                                    </TouchableOpacity>
                                 ) : (
-                                    <Icon
-                                        type="FontAwesome"
-                                        size={24}
-                                        name={'file'}
-                                        color={Colors[theme]['icon']}
-                                    />
+                                    <TouchableOpacity
+                                        onPress={() => handleDownload(item)}
+                                    >
+                                        <Icon
+                                            type="Feather"
+                                            size={24}
+                                            name={'download'}
+                                            color={Colors[theme]['tint']}
+                                        />
+                                    </TouchableOpacity>
                                 )}
                             </ThemedView>
-                            <ThemedView style={{ flex: 1 }}>
-                                <ThemedText style={styles.fileName}>
-                                    {item.name}
-                                </ThemedText>
-                                <ThemedText style={styles.fileMeta}>
-                                    {item.isDirectory
-                                        ? 'Папка'
-                                        : `${item.size}`}
-                                </ThemedText>
-                            </ThemedView>
-
-                            {item.isDirectory ? (
-                                <TouchableOpacity
-                                    onPress={() => handleOpenDir(item)}
-                                >
-                                    <Icon
-                                        type="FontAwesome"
-                                        size={24}
-                                        name={'folder-open'}
-                                        color={Colors[theme]['tint']}
-                                    />
-                                </TouchableOpacity>
-                            ) : (
-                                <TouchableOpacity
-                                    onPress={() => handleDownload(item)}
-                                >
-                                    <Icon
-                                        type="Feather"
-                                        size={24}
-                                        name={'download'}
-                                        color={Colors[theme]['tint']}
-                                    />
-                                </TouchableOpacity>
-                            )}
-                        </ThemedView>
-                    )}
-                />
+                        )}
+                    />
+                )
             )}
         </ThemedView>
     )

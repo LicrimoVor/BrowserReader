@@ -46,22 +46,31 @@ export default function RootLayout() {
     })
 
     if (isLoading) {
-        return <ThemeProvider
-            value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-        >
-            <SafeAreaProvider
-                style={{ backgroundColor: Colors[colorScheme]['header'] }}
+        return (
+            <ThemeProvider
+                value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
             >
-                <StatusBar
-                    style="auto"
-                    translucent={false}
-                    backgroundColor={Colors[colorScheme]['tint']}
-                />
-                <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} edges={['top']}>
-                    <ActivityIndicator size={'large'} style={{ flex: 1 }} />
-                </SafeAreaView>
-            </SafeAreaProvider>
-        </ThemeProvider>
+                <SafeAreaProvider
+                    style={{ backgroundColor: Colors[colorScheme]['header'] }}
+                >
+                    <StatusBar
+                        style="auto"
+                        translucent={false}
+                        backgroundColor={Colors[colorScheme]['tint']}
+                    />
+                    <SafeAreaView
+                        style={{
+                            flex: 1,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                        edges={['top']}
+                    >
+                        <ActivityIndicator size={'large'} style={{ flex: 1 }} />
+                    </SafeAreaView>
+                </SafeAreaProvider>
+            </ThemeProvider>
+        )
     }
 
     return (

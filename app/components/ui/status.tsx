@@ -15,6 +15,8 @@ export const StatusCircle = ({
                     height: size || 14,
                     borderRadius: (size || 14) / 2,
                     marginRight: 8,
+                    padding: 0,
+                    margin: 0,
                     backgroundColor: isActive ? '#34D399' : '#EF4444',
                 },
             ]}

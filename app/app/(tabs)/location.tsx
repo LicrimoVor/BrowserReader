@@ -1,14 +1,16 @@
+import { Icon } from '@/components/icon'
 import { ThemedText } from '@/components/text'
 import { DeleteModal } from '@/components/ui/deleteModal'
 import { LocationFileItem } from '@/components/ui/locationFileItem'
 import { StatusCircle } from '@/components/ui/status'
 import { ThemedView } from '@/components/view'
 import { LOGS_DIR } from '@/core/const'
-import { LOCATION_TASK } from '@/core/tasks'
+import { LOCATION_TASK, LOCATION_TASK_FILENAME } from '@/core/tasks'
 import { Colors } from '@/core/theme'
 import { useInitialEffect } from '@/hooks/useInitialEffect'
 import { LocalFile, useLocalFiles } from '@/hooks/useLocalFiles'
 import { startLocationRecording } from '@/libs/locations'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
     hasStartedLocationUpdatesAsync,
     stopLocationUpdatesAsync,
@@ -31,7 +33,7 @@ export default function LocalPage() {
     const [writingFileName, setWritingFileName] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [isError, setIsError] = useState(false)
-    const colorScheme = useColorScheme() ?? 'light'
+    const theme = useColorScheme() ?? 'light'
 
     useInitialEffect(() => {
         setIsLoading(true)
@@ -39,6 +41,8 @@ export default function LocalPage() {
             setIsLocationStarted(
                 await hasStartedLocationUpdatesAsync(LOCATION_TASK),
             )
+            const fileName = await AsyncStorage.getItem(LOCATION_TASK_FILENAME)
+            if (fileName) setWritingFileName(fileName)
             setIsLoading(false)
         })()
     })
@@ -91,6 +95,14 @@ export default function LocalPage() {
         }
     }
 
+    const onSetDirectory = async () => {
+        // try {
+        //     await startLocationRecording(writingFileName)
+        // } catch (error) {
+        //     setIsError(true)
+        // }
+    }
+
     // const handleRename = (item: LocalFile) => {
     //     setFileTarget(item)
     //     setRenameModalVisible(true)
@@ -110,6 +122,23 @@ export default function LocalPage() {
 
     return (
         <ThemedView style={{ flex: 1, paddingTop: 14 }}>
+            <ThemedView style={{ alignItems: 'center' }}>
+                <ThemedText>
+                    {isLocationStarted ? 'Мониторинг включен' : 'Мониторинг выключен'}
+                </ThemedText>
+                <TouchableOpacity
+                    onPress={onSetDirectory}
+                    style={{ flex: 1, alignItems: 'flex-end' }}
+                >
+                    <Icon
+                        type="Octicons"
+                        size={32}
+                        name={'file-directory-symlink'}
+                        color={Colors[theme]['tint']}
+                    />
+                </TouchableOpacity>
+            </ThemedView>
+
             <FlatList
                 data={files}
                 keyExtractor={(item) => item.name}
@@ -133,7 +162,9 @@ export default function LocalPage() {
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: 12,
+                    padding: 14,
+                    borderTopWidth: 1,
+                    borderColor: '#E5E7EB',
                 }}
             >
                 <ThemedView
@@ -175,7 +206,7 @@ export default function LocalPage() {
                     onPress={onClickHadler}
                     style={{
                         alignItems: 'center',
-                        backgroundColor: Colors[colorScheme]['sideback'],
+                        backgroundColor: Colors[theme]['sideback'],
                         padding: 14,
                         borderRadius: 8,
                     }}

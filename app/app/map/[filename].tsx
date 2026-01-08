@@ -14,7 +14,7 @@ import { useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, useColorScheme } from 'react-native'
 import { Switch } from 'react-native-paper'
-import { SharedValue } from 'react-native-reanimated'
+import { SharedValue, useDerivedValue } from 'react-native-reanimated'
 import {
     CartesianChart,
     Scatter,
@@ -106,10 +106,21 @@ export default function Map() {
         })()
     })
 
+    const pressedXText = useDerivedValue(() => {
+        return String(pressState.x.value.value)
+    })
+
     if (isLoading) {
         return (
-            <ThemedView style={{ flex: 1 }}>
-                <ActivityIndicator size={'large'} style={{ flex: 1 }} />
+            <ThemedView
+                style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+                <ActivityIndicator size={64} style={{ flex: 1 }} />
+                <ThemedText>Загрузка...</ThemedText>
             </ThemedView>
         )
     }
@@ -118,7 +129,7 @@ export default function Map() {
         <ThemedView style={{ flex: 1 }}>
             <ThemedView
                 style={{
-                    padding: 4,
+                    padding: 8,
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 16,
@@ -139,66 +150,105 @@ export default function Map() {
                 <ThemedText style={{ fontSize: 20 }}>
                     Карта: {filename}
                 </ThemedText>
-                <Switch value={showScatter} onValueChange={setShowScatter} />
-            </ThemedView>
-
-            <ThemedView style={{ padding: 10, flex: 1 }}>
-                <CartesianChart
-                    domain={{
-                        x: showScatter ? undefined : minMaxKm,
-                        y: showScatter ? undefined : [0, maxTime],
-                    }}
-                    transformState={!showScatter ? undefined : transformState}
-                    chartPressState={!showScatter ? pressState : undefined}
-                    domainPadding={0}
-                    data={allPoints}
-                    xKey={showScatter ? 'lon' : 'km'}
-                    yKeys={
-                        showScatter ? ['latBase', 'latTrack'] : ['trackTime']
-                    }
-                    axisOptions={{
-                        lineColor: Colors[colorSchema]['text'],
-                        formatXLabel: (km) => `${km} км`,
-                        font,
-                        labelColor: Colors[colorSchema]['text'],
+                <ThemedView
+                    style={{
+                        marginLeft: 'auto',
+                        flexDirection: 'row',
+                        alignItems: 'center',
                     }}
                 >
-                    {({ points }) =>
-                        showScatter ? (
-                            <>
-                                <Scatter
-                                    points={points.latBase}
-                                    color="red"
-                                    radius={1}
-                                />
+                    <Icon
+                        name="line-chart"
+                        type="AntDesign"
+                        size={24}
+                        color={Colors[colorSchema]['text']}
+                    />
+                    <Switch
+                        value={showScatter}
+                        onValueChange={setShowScatter}
+                    />
+                    <Icon
+                        name="map"
+                        type="FontAwesome5"
+                        size={24}
+                        color={Colors[colorSchema]['text']}
+                    />
+                </ThemedView>
+            </ThemedView>
 
-                                <Scatter
-                                    points={points.latTrack}
-                                    color="blue"
-                                    radius={1}
-                                />
-                            </>
-                        ) : (
-                            <>
-                                <Scatter
-                                    points={points.trackTime}
-                                    color="blue"
-                                    radius={1}
-                                />
-
-                                {isActive ? (
-                                    <Text
-                                        x={pressState.x.position}
-                                        y={pressState.y.trackTime.position}
-                                        font={font}
-                                        text={String(pressState.x.value.value)}
+            <ThemedView style={{ flex: 1, padding: 4 }}>
+                <ThemedText>{showScatter ? 'Широта' : 'Время'}</ThemedText>
+                <ThemedView style={{ flex: 1 }}>
+                    <CartesianChart
+                        domain={{
+                            x: showScatter ? undefined : minMaxKm,
+                            y: showScatter ? undefined : [0, maxTime],
+                        }}
+                        transformState={
+                            !showScatter ? undefined : transformState
+                        }
+                        chartPressState={!showScatter ? pressState : undefined}
+                        domainPadding={{
+                            left: 12,
+                            right: 24,
+                            top: 8,
+                            bottom: 0,
+                        }}
+                        data={allPoints}
+                        xKey={showScatter ? 'lon' : 'km'}
+                        yKeys={
+                            showScatter
+                                ? ['latBase', 'latTrack']
+                                : ['trackTime']
+                        }
+                        axisOptions={{
+                            lineColor: Colors[colorSchema]['text'],
+                            font,
+                            labelColor: Colors[colorSchema]['text'],
+                        }}
+                    >
+                        {({ points }) =>
+                            showScatter ? (
+                                <>
+                                    <Scatter
+                                        points={points.latBase}
                                         color="red"
+                                        radius={1}
                                     />
-                                ) : null}
-                            </>
-                        )
-                    }
-                </CartesianChart>
+
+                                    <Scatter
+                                        points={points.latTrack}
+                                        color="blue"
+                                        radius={1}
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <Scatter
+                                        points={points.trackTime}
+                                        color="blue"
+                                        radius={1}
+                                    />
+
+                                    {isActive ? (
+                                        <Text
+                                            x={pressState.x.position}
+                                            y={pressState.y.trackTime.position}
+                                            font={font}
+                                            text={pressedXText}
+                                            color="red"
+                                        />
+                                    ) : null}
+                                </>
+                            )
+                        }
+                    </CartesianChart>
+                    <ThemedText
+                        style={{ marginLeft: 'auto', marginRight: 'auto' }}
+                    >
+                        {showScatter ? 'Долгота' : 'Координата'}
+                    </ThemedText>
+                </ThemedView>
             </ThemedView>
         </ThemedView>
     )
