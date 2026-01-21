@@ -62,7 +62,8 @@ export default function LocalPage() {
             const nowDate = new Date()
             const fileName = `${nowDate.getFullYear()}.${nowDate.getMonth() + 1}.${nowDate.getDate()}.json`
             setWritingFileName(fileName)
-            await startLocationRecording(fileName)
+            const isStarted = await startLocationRecording(fileName)
+            setIsLocationStarted(isStarted)
         }
         setIsLocationStarted(
             await hasStartedLocationUpdatesAsync(LOCATION_TASK),

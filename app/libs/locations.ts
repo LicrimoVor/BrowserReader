@@ -9,6 +9,7 @@ import { Directory, File } from 'expo-file-system'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getOrCreateFile } from './createFile'
 
+
 export async function requestLocationPermissions() {
     const fg = await Location.requestForegroundPermissionsAsync()
     if (fg.status !== 'granted') {
@@ -21,30 +22,49 @@ export async function requestLocationPermissions() {
     }
 }
 
-export async function startLocationRecording(fileName: string) {
+export async function startLocationRecording(fileName: string): Promise<boolean> {
     console.log('starting location')
     await AsyncStorage.setItem(LOCATION_TASK_FILENAME, fileName)
     const dirs = await AsyncStorage.getItem(KEY_DIRS)
-    if (!dirs) return
+    if (!dirs) return false
 
     const log_dir = JSON.parse(dirs)[LOGS_DIR]
     await getOrCreateFile(new Directory(log_dir), fileName)
 
     const started = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK)
-    if (started) return
+    if (started) return true
 
-    await Location.startLocationUpdatesAsync(LOCATION_TASK, {
+    if (!(await Location.hasServicesEnabledAsync())) {
+        console.log('Location services disabled')
+        return false
+    }
+
+    await Location.requestForegroundPermissionsAsync()
+    await Location.requestBackgroundPermissionsAsync()
+
+    try {
+        const lol = await Location.getLastKnownPositionAsync()
+        console.log(lol)
+        if (!lol) {
+            return false
+        }
+    } catch {
+        return false
+    }
+
+    return await Location.startLocationUpdatesAsync(LOCATION_TASK, {
         accuracy: Location.Accuracy.High,
-        timeInterval: 10_000,
-        distanceInterval: 100,
-        showsBackgroundLocationIndicator: true,
+        timeInterval: 5_000,
+        distanceInterval: 0,
+        // showsBackgroundLocationIndicator: true,
         foregroundService: {
-            notificationTitle: 'Запись местоположения',
-            notificationBody: 'Идет фоновая запись координат',
-            notificationColor: '#1976D2',
+            notificationTitle: 'Трекер работает',
+            notificationBody: 'Идёт запись координат',
         },
         pausesUpdatesAutomatically: false,
-    }).then(() => console.log('started'))
+    })
+        .then(() => {console.log('started'); return true})
+        .catch((e) => {console.log(e);  return false})
 }
 
 export async function stopLocationRecording() {

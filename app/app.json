@@ -57,7 +57,9 @@
             [
                 "expo-location",
                 {
-                    "isAndroidBackgroundLocationEnabled": true
+                    "locationAlwaysAndWhenInUsePermission": "Разрешить доступ к местоположению для работы трекера.",
+                    "isAndroidBackgroundLocationEnabled": true,
+                    "isAndroidForegroundServiceEnabled": true
                 }
             ],
             [

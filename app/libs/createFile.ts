@@ -8,6 +8,7 @@ export const getOrCreateFile = async (dir: Directory, fileName: string) => {
         dir.uri.startsWith(DEFAULT_ROOT_DIR)
     ) {
         file = new File(dir.uri + fileName)
+        if (file.exists) return file
         try {
             file.create()
         } catch (e) {
